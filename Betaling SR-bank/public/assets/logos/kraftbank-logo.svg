@@ -1,0 +1,17 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="700" height="180" viewBox="0 0 700 180" fill="none">
+  <rect width="700" height="180" fill="transparent"/>
+  <g transform="translate(22 26)">
+    <circle cx="62" cy="62" r="62" fill="#F26122"/>
+    <circle cx="38" cy="56" r="7" fill="#000"/>
+    <circle cx="86" cy="56" r="7" fill="#000"/>
+    <path d="M40 88C44 102 52 109 62 109C72 109 80 102 84 88" stroke="#000" stroke-width="6" stroke-linecap="round"/>
+  </g>
+  <g fill="#000" font-family="Chivo, Arial, sans-serif" font-weight="900">
+    <text x="178" y="88" font-size="74" letter-spacing="-1.5">kraft</text>
+    <text x="178" y="148" font-size="74" letter-spacing="-1.5">bank</text>
+  </g>
+  <g stroke="#F26122" stroke-width="10" stroke-linecap="round">
+    <line x1="555" y1="145" x2="623" y2="74"/>
+    <line x1="587" y1="145" x2="655" y2="74"/>
+  </g>
+</svg>

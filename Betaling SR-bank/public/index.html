@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Betaling SR-bank</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="card">
+    <header class="brand-header">
+      <img class="brand-logo" src="assets/logos/kraftbank-logo.svg" alt="Kraft Bank logo">
+      <img class="brand-icon" src="assets/logos/kraftbank-logopain.svg" alt="Kraft Bank logopain">
+    </header>
+
+    <h1>Betaling SR-bank</h1>
+    <p>Registrer flere foringer samtidig. Tabellen starter med 25 linjer.</p>
+    <a class="manage-link" href="creditors.html">Vedlikehold kreditorliste</a>
+    <a class="manage-link" href="history.html">Historikk og backup</a>
+
+    <form id="pain-form">
+      <datalist id="creditor-options"></datalist>
+      <section class="summary-grid">
+        <div class="summary-card">
+          <span class="summary-label">Totalt belop</span>
+          <strong id="summary-amount">0,00</strong>
+        </div>
+        <div class="summary-card">
+          <span class="summary-label">Antall linjer brukt</span>
+          <strong id="summary-lines">0</strong>
+        </div>
+      </section>
+      <section class="meta-grid">
+        <label for="caseHandler">Saksbehandler</label>
+        <input id="caseHandler" name="caseHandler" type="text" required>
+
+        <label for="cloNumber">CLO nummer</label>
+        <input id="cloNumber" name="cloNumber" type="text" required>
+      </section>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Kreditor</th>
+              <th>KID</th>
+              <th>Notat til kunde</th>
+              <th>Internt notat</th>
+              <th>Kontonummer</th>
+              <th>Belop</th>
+              <th>Dato</th>
+            </tr>
+          </thead>
+          <tbody id="entries-body"></tbody>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="add-lines">Flere linjer</button>
+        <button type="submit">Generer XML</button>
+      </div>
+    </form>
+
+    <p id="status"></p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
