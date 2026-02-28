@@ -19,5 +19,6 @@ ENV ASPNETCORE_URLS=http://0.0.0.0:10000
 ENV PORT=10000
 COPY --from=build /app/publish ./
 COPY --from=build /src/public ./public
+COPY --from=build /src/data ./data
 EXPOSE 10000
 ENTRYPOINT ["dotnet", "BetalingSrBank.dll"]

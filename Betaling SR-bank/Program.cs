@@ -17,7 +17,7 @@ if (string.IsNullOrWhiteSpace(storageRootPath))
 {
     storageRootPath = app.Environment.ContentRootPath;
 }
-var dataStore = new DataStore(storageRootPath);
+var dataStore = new DataStore(storageRootPath, app.Environment.ContentRootPath);
 dataStore.EnsureStores();
 
 app.UseDefaultFiles();
@@ -355,7 +355,7 @@ app.Urls.Clear();
 app.Urls.Add($"http://0.0.0.0:{port}");
 app.Run();
 
-sealed class DataStore(string rootPath)
+sealed class DataStore(string rootPath, string seedRootPath)
 {
     private readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -367,25 +367,17 @@ sealed class DataStore(string rootPath)
     public string HistoryFile { get; } = Path.Combine(rootPath, "data", "history.json");
     public string ForingerFile { get; } = Path.Combine(rootPath, "data", "foringer.json");
     public string BackupDirectory { get; } = Path.Combine(rootPath, "backups");
+    public string SeedDataDirectory { get; } = Path.Combine(seedRootPath, "data");
+    public string SeedMarkerFile { get; } = Path.Combine(rootPath, "data", ".seeded");
 
     public void EnsureStores()
     {
         Directory.CreateDirectory(DataDirectory);
         Directory.CreateDirectory(BackupDirectory);
-        if (!File.Exists(CreditorsFile))
-        {
-            File.WriteAllText(CreditorsFile, "[]");
-        }
-
-        if (!File.Exists(HistoryFile))
-        {
-            File.WriteAllText(HistoryFile, "[]");
-        }
-
-        if (!File.Exists(ForingerFile))
-        {
-            File.WriteAllText(ForingerFile, "[]");
-        }
+        EnsureJsonFile(CreditorsFile);
+        EnsureJsonFile(HistoryFile);
+        EnsureJsonFile(ForingerFile);
+        SeedCreditorsOnce();
     }
 
     public List<CreditorRecord> ReadCreditors()
@@ -450,6 +442,46 @@ sealed class DataStore(string rootPath)
         }
 
         return JsonSerializer.Deserialize<T>(content, _jsonOptions);
+    }
+
+    private static void EnsureJsonFile(string filePath)
+    {
+        if (!File.Exists(filePath))
+        {
+            File.WriteAllText(filePath, "[]");
+        }
+    }
+
+    private void SeedCreditorsOnce()
+    {
+        if (File.Exists(SeedMarkerFile))
+        {
+            return;
+        }
+
+        var seedCreditorsFile = Path.Combine(SeedDataDirectory, "creditors.json");
+        if (!File.Exists(seedCreditorsFile))
+        {
+            File.WriteAllText(SeedMarkerFile, DateTime.UtcNow.ToString("o"));
+            return;
+        }
+
+        var current = File.ReadAllText(CreditorsFile).Trim();
+        var currentIsEmptyList = string.IsNullOrWhiteSpace(current) || current == "[]";
+        if (!currentIsEmptyList)
+        {
+            File.WriteAllText(SeedMarkerFile, DateTime.UtcNow.ToString("o"));
+            return;
+        }
+
+        var seedContent = File.ReadAllText(seedCreditorsFile).Trim();
+        var seedHasData = !string.IsNullOrWhiteSpace(seedContent) && seedContent != "[]";
+        if (seedHasData)
+        {
+            File.WriteAllText(CreditorsFile, seedContent);
+        }
+
+        File.WriteAllText(SeedMarkerFile, DateTime.UtcNow.ToString("o"));
     }
 }
 
