@@ -352,7 +352,7 @@ if (!int.TryParse(portValue, out var port))
 }
 
 app.Urls.Clear();
-app.Urls.Add($"http://localhost:{port}");
+app.Urls.Add($"http://0.0.0.0:{port}");
 app.Run();
 
 sealed class DataStore(string rootPath)
