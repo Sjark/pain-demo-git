@@ -15,7 +15,7 @@ RUN dotnet publish BetalingSrBank.csproj -c Release -o /app/publish /p:UseAppHos
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-ENV ASPNETCORE_URLS=http://0.0.0.0:10000
+ENV ASPNETCORE_URLS=http://+:10000
 ENV PORT=10000
 COPY --from=build /app/publish ./
 COPY --from=build /src/public ./public

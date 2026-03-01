@@ -356,14 +356,6 @@ app.MapFallback(async context =>
     await context.Response.SendFileAsync(Path.Combine(app.Environment.WebRootPath!, "index.html"));
 });
 
-var portValue = Environment.GetEnvironmentVariable("PORT");
-if (!int.TryParse(portValue, out var port))
-{
-    port = 3200;
-}
-
-app.Urls.Clear();
-app.Urls.Add($"http://0.0.0.0:{port}");
 app.Run();
 
 sealed class DataStore(string rootPath, string seedRootPath)
