@@ -7,16 +7,18 @@ import {
   isValidAccountNumber,
   isValidCustomerNoteFormat,
   isValidKid,
+  parseCustomerNoteFields,
   parseAmountInput,
 } from "../utils";
 
 const INITIAL_ROWS = 25;
 const STEP_ROWS = 5;
 
-function createEmptyRow() {
+function createEmptyRow(hovedlantaker = "") {
   return {
     creditor: "",
     kid: "",
+    owner: hovedlantaker,
     customerNote: "",
     internalNote: "",
     accountNumber: "",
@@ -26,10 +28,12 @@ function createEmptyRow() {
   };
 }
 
-function normalizeIncomingRow(row) {
+function normalizeIncomingRow(row, hovedlantaker = "") {
+  const parsedNote = parseCustomerNoteFields(row?.customerNote);
   return {
     creditor: String(row?.creditor || ""),
     kid: String(row?.kid || ""),
+    owner: String(row?.owner || parsedNote.owner || hovedlantaker || ""),
     customerNote: String(row?.customerNote || ""),
     internalNote: String(row?.internalNote || ""),
     accountNumber: String(row?.accountNumber || ""),
@@ -42,10 +46,11 @@ function normalizeIncomingRow(row) {
 export default function ForingPage() {
   const { foringId } = useParams();
   const [entries, setEntries] = useState(() =>
-    Array.from({ length: INITIAL_ROWS }, (_, index) => ({ ...createEmptyRow(), boligLaan: index === 0 }))
+    Array.from({ length: INITIAL_ROWS }, (_, index) => ({ ...createEmptyRow(""), boligLaan: index === 0 }))
   );
   const [caseHandler, setCaseHandler] = useState("");
   const [cloNumber, setCloNumber] = useState("");
+  const [hovedlantaker, setHovedlantaker] = useState("");
   const [etableringshonorar, setEtableringshonorar] = useState("");
   const [foringStatus, setForingStatus] = useState("Pågående");
   const [statusText, setStatusText] = useState("");
@@ -78,16 +83,21 @@ export default function ForingPage() {
         setCreditors(Array.isArray(creditorsPayload) ? creditorsPayload : []);
         setCaseHandler(String(foringPayload.caseHandler || ""));
         setCloNumber(String(foringPayload.cloNumber || ""));
+        const loadedHovedlantaker = String(foringPayload.hovedlantaker || "");
+        setHovedlantaker(loadedHovedlantaker);
         setEtableringshonorar(String(foringPayload.etableringshonorar || ""));
         setForingStatus(String(foringPayload.status || "Pågående"));
 
         const incomingEntries = Array.isArray(foringPayload.entries)
-          ? foringPayload.entries.map(normalizeIncomingRow)
+          ? foringPayload.entries.map((row) => normalizeIncomingRow(row, loadedHovedlantaker))
           : [];
 
         let rows = incomingEntries.length > 0
           ? incomingEntries
-          : Array.from({ length: INITIAL_ROWS }, (_, index) => ({ ...createEmptyRow(), boligLaan: index === 0 }));
+          : Array.from({ length: INITIAL_ROWS }, (_, index) => ({
+              ...createEmptyRow(loadedHovedlantaker),
+              boligLaan: index === 0,
+            }));
 
         if (rows.length > 0) {
           const selectedIndex = rows.findIndex((row) => row.boligLaan);
@@ -188,6 +198,20 @@ export default function ForingPage() {
     setEntries((prev) => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)));
   }
 
+  function handleHovedlantakerChange(value) {
+    const nextValue = value;
+    setEntries((prev) =>
+      prev.map((row) => {
+        const ownerRaw = String(row.owner || "");
+        if (!ownerRaw.trim() || ownerRaw === hovedlantaker) {
+          return { ...row, owner: nextValue };
+        }
+        return row;
+      })
+    );
+    setHovedlantaker(nextValue);
+  }
+
   function updateBoligLaan(index, value) {
     setEntries((prev) => {
       if (!value) {
@@ -234,7 +258,7 @@ export default function ForingPage() {
   }
 
   function addRows() {
-    setEntries((prev) => [...prev, ...Array.from({ length: STEP_ROWS }, () => createEmptyRow())]);
+    setEntries((prev) => [...prev, ...Array.from({ length: STEP_ROWS }, () => createEmptyRow(hovedlantaker))]);
     setStatusText(`La til ${STEP_ROWS} nye linjer.`);
   }
 
@@ -243,6 +267,7 @@ export default function ForingPage() {
     const payload = {
       cloNumber: cloNumber.trim(),
       caseHandler: caseHandler.trim(),
+      hovedlantaker: hovedlantaker.trim(),
       etableringshonorar: etableringshonorar.trim(),
       entries,
       status: effectiveStatus,
@@ -261,8 +286,8 @@ export default function ForingPage() {
   }
 
   async function handleSave() {
-    if (!caseHandler.trim() || !cloNumber.trim()) {
-      setStatusText("Saksbehandler og CLO nummer ma fylles ut.");
+    if (!caseHandler.trim() || !cloNumber.trim() || !hovedlantaker.trim()) {
+      setStatusText("Saksbehandler, CLO nummer og hovedlantaker ma fylles ut.");
       return;
     }
 
@@ -283,8 +308,8 @@ export default function ForingPage() {
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (!caseHandler.trim() || !cloNumber.trim()) {
-      setStatusText("Saksbehandler og CLO nummer ma fylles ut.");
+    if (!caseHandler.trim() || !cloNumber.trim() || !hovedlantaker.trim()) {
+      setStatusText("Saksbehandler, CLO nummer og hovedlantaker ma fylles ut.");
       return;
     }
 
@@ -406,19 +431,29 @@ export default function ForingPage() {
             onChange={(event) => setCaseHandler(event.target.value)}
           />
 
-          <label htmlFor="cloNumber">CLO nummer</label>
-          <input
-            id="cloNumber"
+              <label htmlFor="cloNumber">CLO nummer</label>
+              <input
+                id="cloNumber"
             name="cloNumber"
             type="text"
             required
             value={cloNumber}
-            onChange={(event) => setCloNumber(event.target.value)}
-          />
+                onChange={(event) => setCloNumber(event.target.value)}
+              />
 
-          <label htmlFor="foringStatus">Status</label>
-          <select
-            id="foringStatus"
+              <label htmlFor="hovedlantaker">Hovedlåntaker</label>
+              <input
+                id="hovedlantaker"
+                name="hovedlantaker"
+                type="text"
+                required
+                value={hovedlantaker}
+                onChange={(event) => handleHovedlantakerChange(event.target.value)}
+              />
+
+              <label htmlFor="foringStatus">Status</label>
+              <select
+                id="foringStatus"
             name="foringStatus"
             value={foringStatus}
             onChange={(event) => setForingStatus(event.target.value)}
@@ -441,6 +476,7 @@ export default function ForingPage() {
                 <th>Internt notat</th>
                 <th>Kontonummer</th>
                 <th>Belop</th>
+                <th>Eier</th>
                 <th>Dato for utbetaling</th>
               </tr>
             </thead>
@@ -504,6 +540,12 @@ export default function ForingPage() {
                       inputMode="decimal"
                       onChange={(event) => updateRow(index, { amount: event.target.value })}
                       onBlur={() => handleAmountBlur(index)}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      value={row.owner}
+                      onChange={(event) => updateRow(index, { owner: event.target.value })}
                     />
                   </td>
                   <td>

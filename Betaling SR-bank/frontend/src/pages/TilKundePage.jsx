@@ -53,7 +53,7 @@ export default function TilKundePage() {
           kid: String(row.kid || ""),
           amount: amountText,
           reference: noteInfo.reference,
-          owner: noteInfo.owner,
+          owner: String(row.owner || noteInfo.owner || ""),
         };
       });
   }, [rows]);
@@ -71,6 +71,24 @@ export default function TilKundePage() {
       total: sumForinger + parsedHonorar,
     };
   }, [listRows, kraftBankHonorar]);
+
+  const boligLaanAmountText = useMemo(() => {
+    const boligLaanRow = rows.find((row) => Boolean(row?.boligLaan));
+    if (!boligLaanRow) return "xxx1";
+
+    const parsedAmount = parseAmountInput(boligLaanRow.amount);
+    if (!parsedAmount) return "xxx1";
+
+    return formatAmount(parsedAmount);
+  }, [rows]);
+
+  const boligLaanAccountText = useMemo(() => {
+    const boligLaanRow = rows.find((row) => Boolean(row?.boligLaan));
+    if (!boligLaanRow) return "xx2";
+
+    const accountNumber = String(boligLaanRow.accountNumber || "").trim();
+    return accountNumber || "xx2";
+  }, [rows]);
 
   async function saveKraftBankHonorar() {
     try {
@@ -118,7 +136,7 @@ export default function TilKundePage() {
       <section className="customer-section">
         <h2>Del 1: Tekst for sletting av pant</h2>
         <p className="customer-text">
-          Vi har i dag overført xxx1- på konto xx2 for innfrielse. Beløpet oversendes under
+          Vi har i dag overført {boligLaanAmountText}- på konto {boligLaanAccountText} for innfrielse. Beløpet oversendes under
           forutsetning av at tilknyttet pantedokument blir slettet omgående. Dersom beløpet ikke er
           korrekt eller at pantedokumentet av andre årsaker ikke kan slettes, imøteser vi omgående
           tilbakemelding om dette. I de tilfellene det er overskytende på konto, vennligst returner

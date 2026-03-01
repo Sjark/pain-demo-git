@@ -104,6 +104,7 @@ app.MapPost("/api/foringer", async (HttpRequest request) =>
             Id = Guid.NewGuid().ToString(),
             CloNumber = cloNumber,
             CaseHandler = caseHandler,
+            Hovedlantaker = string.Empty,
             Etableringshonorar = string.Empty,
             CreatedAt = now,
             UpdatedAt = now,
@@ -172,6 +173,16 @@ app.MapPut("/api/foringer/{id}", async (string id, HttpRequest request) =>
         if (payload?.Etableringshonorar is not null)
         {
             item.Etableringshonorar = payload.Etableringshonorar.Trim();
+        }
+
+        if (payload?.Hovedlantaker is not null)
+        {
+            var hovedlantaker = payload.Hovedlantaker.Trim();
+            if (string.IsNullOrWhiteSpace(hovedlantaker))
+            {
+                return Results.Json(new { error = "Hovedlantaker ma fylles ut." }, statusCode: 400);
+            }
+            item.Hovedlantaker = hovedlantaker;
         }
 
         if (payload?.Entries is not null)
@@ -917,6 +928,7 @@ sealed class IncomingEntry
 {
     public string? Creditor { get; set; }
     public string? Kid { get; set; }
+    public string? Owner { get; set; }
     public string? CustomerNote { get; set; }
     public string? InternalNote { get; set; }
     public string? AccountNumber { get; set; }
@@ -940,6 +952,7 @@ sealed class UpdateForingRequest
 {
     public string? CloNumber { get; set; }
     public string? CaseHandler { get; set; }
+    public string? Hovedlantaker { get; set; }
     public string? Etableringshonorar { get; set; }
     public string? Status { get; set; }
     public List<IncomingEntry>? Entries { get; set; }
@@ -968,6 +981,7 @@ sealed class ForingDocument
     public string Id { get; set; } = string.Empty;
     public string CloNumber { get; set; } = string.Empty;
     public string CaseHandler { get; set; } = string.Empty;
+    public string Hovedlantaker { get; set; } = string.Empty;
     public string Etableringshonorar { get; set; } = string.Empty;
     public string? CreatedAt { get; set; }
     public string? UpdatedAt { get; set; }
